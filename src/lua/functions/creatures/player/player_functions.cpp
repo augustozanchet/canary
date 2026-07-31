@@ -337,6 +337,7 @@ void PlayerFunctions::init(lua_State* L) {
 	Lua::registerMethod(L, "Player", "getBlessingCount", PlayerFunctions::luaPlayerGetBlessingCount);
 
 	Lua::registerMethod(L, "Player", "canLearnSpell", PlayerFunctions::luaPlayerCanLearnSpell);
+	Lua::registerMethod(L, "Player", "isSpellForVocation", PlayerFunctions::luaPlayerIsSpellForVocation);
 	Lua::registerMethod(L, "Player", "learnSpell", PlayerFunctions::luaPlayerLearnSpell);
 	Lua::registerMethod(L, "Player", "forgetSpell", PlayerFunctions::luaPlayerForgetSpell);
 	Lua::registerMethod(L, "Player", "hasLearnedSpell", PlayerFunctions::luaPlayerHasLearnedSpell);
@@ -3443,8 +3444,7 @@ int PlayerFunctions::luaPlayerCanLearnSpell(lua_State* L) {
 		return 1;
 	}
 
-	const auto vocMap = spell->getVocMap();
-	if (!vocMap.contains(player->getVocationId())) {
+	if (!spell->isVocationAllowed(player)) {
 		Lua::pushBoolean(L, false);
 	} else if (player->getLevel() < spell->getLevel()) {
 		Lua::pushBoolean(L, false);
@@ -3453,6 +3453,31 @@ int PlayerFunctions::luaPlayerCanLearnSpell(lua_State* L) {
 	} else {
 		Lua::pushBoolean(L, true);
 	}
+	return 1;
+}
+
+int PlayerFunctions::luaPlayerIsSpellForVocation(lua_State* L) {
+	// player:isSpellForVocation(spellName)
+	const auto &player = Lua::getUserdataShared<Player>(L, 1, "Player");
+	if (!player) {
+		lua_pushnil(L);
+		return 1;
+	}
+
+	const std::string &spellName = Lua::getString(L, 2);
+	const auto &spell = g_spells().getInstantSpellByName(spellName);
+	if (!spell) {
+		Lua::reportErrorFunc("Spell \"" + spellName + "\" not found");
+		Lua::pushBoolean(L, false);
+		return 1;
+	}
+
+	if (player->hasFlag(PlayerFlags_t::IgnoreSpellCheck)) {
+		Lua::pushBoolean(L, true);
+		return 1;
+	}
+
+	Lua::pushBoolean(L, spell->isVocationAllowed(player));
 	return 1;
 }
 

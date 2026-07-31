@@ -11,6 +11,7 @@
 
 #include "creatures/creature.hpp"
 #include "enums/forge_conversion.hpp"
+#include "map/map_const.hpp"
 #include "game/bank/bank.hpp"
 #include "grouping/guild.hpp"
 #include "items/cylinder.hpp"
@@ -403,6 +404,17 @@ public:
 
 	uint32_t getProtocolVersion() const;
 	std::shared_ptr<ProtocolGame> getClient() const;
+
+	// Client map aware-range negotiation (S2C/C2C opcode 0x33).
+	// renderViewport is the half-extent the client renders; the server sends
+	// (renderViewport + 1) on each half to keep a 1-tile preload border invisible
+	// to the player (avoids visible tile pop-in at screen edges).
+	uint8_t getRenderViewportX() const;
+	uint8_t getRenderViewportY() const;
+	uint8_t getSendViewportX() const;
+	uint8_t getSendViewportY() const;
+	void setRenderViewport(uint8_t x, uint8_t y);
+	static constexpr uint8_t MAX_RENDER_VIEWPORT = 18;
 
 	bool hasSecureMode() const;
 
@@ -1834,6 +1846,8 @@ private:
 
 	PlayerSex_t sex = PLAYERSEX_FEMALE;
 	OperatingSystem_t operatingSystem = CLIENTOS_NONE;
+	uint8_t renderViewportX = static_cast<uint8_t>(MAP_MAX_CLIENT_VIEW_PORT_X);
+	uint8_t renderViewportY = static_cast<uint8_t>(MAP_MAX_CLIENT_VIEW_PORT_Y);
 	BlockType_t lastAttackBlockType = BLOCK_NONE;
 	TradeState_t tradeState = TRADE_NONE;
 	FightMode_t fightMode = FIGHTMODE_ATTACK;

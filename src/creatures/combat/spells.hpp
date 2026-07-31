@@ -158,6 +158,7 @@ public:
 	void setEnabled(bool e);
 
 	[[nodiscard]] const VocSpellMap &getVocMap() const;
+	[[nodiscard]] bool isVocationAllowed(const std::shared_ptr<Player> &player) const;
 	void addVocMap(uint16_t vocationId, bool b);
 
 	SpellGroup_t getGroup() const;

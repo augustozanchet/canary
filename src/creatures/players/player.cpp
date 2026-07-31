@@ -997,6 +997,42 @@ void Player::setOperatingSystem(OperatingSystem_t clientos) {
 	operatingSystem = clientos;
 }
 
+uint8_t Player::getRenderViewportX() const {
+	return renderViewportX;
+}
+
+uint8_t Player::getRenderViewportY() const {
+	return renderViewportY;
+}
+
+// (31/07/2026) SEM o "+1".
+//
+// Estas funcoes substituem MAP_MAX_CLIENT_VIEW_PORT_X/Y nas chamadas de
+// GetMapDescription. O valor tem que ser EXATAMENTE o que a constante valia
+// (8 e 6), senao todo cliente — negociando ou nao — recebe o pedaco de mapa
+// deslocado em um quadrado a cada passo. Foi o que aconteceu no teste de
+// 31/07: o servidor mandava dados validos, do lugar errado. Nada registrava
+// erro; a tela so ficava torta.
+//
+// Os pontos de chamada que precisam de +1 ja o somam explicitamente
+// (ex.: newPos.x + (getSendViewportX() + 1)), espelhando o codigo original.
+// Somar aqui dentro fazia +1 onde nao devia e +2 onde ja havia soma.
+uint8_t Player::getSendViewportX() const {
+	return renderViewportX;
+}
+
+uint8_t Player::getSendViewportY() const {
+	return renderViewportY;
+}
+
+void Player::setRenderViewport(uint8_t x, uint8_t y) {
+	const auto clampRange = [](uint8_t v) {
+		return std::clamp<uint8_t>(v, 1, MAX_RENDER_VIEWPORT);
+	};
+	renderViewportX = clampRange(x);
+	renderViewportY = clampRange(y);
+}
+
 bool Player::isOldProtocol() const {
 	return client && client->oldProtocol;
 }

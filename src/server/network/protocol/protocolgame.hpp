@@ -471,6 +471,7 @@ private:
 
 	// tiles
 	void sendMapDescription(const Position &pos);
+	void sendChangeMapAwareRange(uint8_t xrange, uint8_t yrange);
 
 	void sendAddTileItem(const Position &pos, uint32_t stackpos, const std::shared_ptr<Item> &item);
 	void sendUpdateTileItem(const Position &pos, uint32_t stackpos, const std::shared_ptr<Item> &item);
@@ -547,6 +548,9 @@ private:
 
 	// otclient
 	void parseExtendedOpcode(NetworkMessage &msg);
+
+	// OTCv8 map aware-range negotiation (C2S opcode 0x33)
+	void parseChangeMapAwareRange(NetworkMessage &msg);
 
 	// OTCv8
 	void sendFeatures();

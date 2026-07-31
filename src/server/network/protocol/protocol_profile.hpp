@@ -79,6 +79,10 @@ enum class ProtocolFeature : uint64_t {
 	GraphicalEffectSourceByte = 1ULL << 19,
 	OfficialSoulSealsPackets = 1ULL << 20,
 	OfficialSkillWheelPayload = 1ULL << 21, // 15.25 confirmed: 0x5F includes the current quest-bonus and gem-list layout.
+	// OTCv8 client <-> server map aware-range negotiation via opcode 0x33.
+	// Server accepts a requested client render viewport and answers with the
+	// echoed render range; the actual tile send uses render+1 (preload border).
+	ChangeMapAwareRange = 1ULL << 22,
 };
 
 [[nodiscard]] constexpr ProtocolFeature operator|(ProtocolFeature left, ProtocolFeature right) {
