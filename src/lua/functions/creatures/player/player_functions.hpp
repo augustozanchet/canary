@@ -245,6 +245,7 @@ class PlayerFunctions {
 	static int luaPlayerGetBlessingCount(lua_State* L);
 
 	static int luaPlayerCanLearnSpell(lua_State* L);
+	static int luaPlayerIsSpellForVocation(lua_State* L);
 	static int luaPlayerLearnSpell(lua_State* L);
 	static int luaPlayerForgetSpell(lua_State* L);
 	static int luaPlayerHasLearnedSpell(lua_State* L);

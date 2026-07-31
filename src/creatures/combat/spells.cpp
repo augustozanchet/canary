@@ -491,6 +491,18 @@ bool Spell::playerSpellCheck(const std::shared_ptr<Player> &player) const {
 		return false;
 	}
 
+	if (!isVocationAllowed(player) && player->getGroup()->id < GROUP_TYPE_GAMEMASTER) {
+		player->sendCancelMessage(RETURNVALUE_YOURVOCATIONCANNOTUSETHISSPELL);
+		g_game().addMagicEffect(player->getPosition(), CONST_ME_POFF);
+		return false;
+	}
+
+	if (isInstant() && (g_configManager().getBoolean(LEARN_SPELLS) || getNeedLearn()) && !player->hasLearnedInstantSpell(getName())) {
+		player->sendCancelMessage(RETURNVALUE_YOUNEEDTOLEARNTHISSPELL);
+		g_game().addMagicEffect(player->getPosition(), CONST_ME_POFF);
+		return false;
+	}
+
 	if (aggressive && (range < 1 || (range > 0 && !player->getAttackedCreature())) && player->getSkull() == SKULL_BLACK) {
 		player->sendCancelMessage(RETURNVALUE_NOTPOSSIBLE);
 		return false;
@@ -539,28 +551,6 @@ bool Spell::playerSpellCheck(const std::shared_ptr<Player> &player) const {
 		player->sendCancelMessage(RETURNVALUE_NOTENOUGHSOUL);
 		g_game().addMagicEffect(player->getPosition(), CONST_ME_POFF);
 		return false;
-	}
-
-	if (g_configManager().getBoolean(LEARN_SPELLS)) {
-		if (isInstant()) {
-			if (!player->hasLearnedInstantSpell(getName())) {
-				player->sendCancelMessage(RETURNVALUE_YOUNEEDTOLEARNTHISSPELL);
-				g_game().addMagicEffect(player->getPosition(), CONST_ME_POFF);
-				return false;
-			}
-		}
-	} else {
-		if (isInstant() && getNeedLearn()) {
-			if (!player->hasLearnedInstantSpell(getName())) {
-				player->sendCancelMessage(RETURNVALUE_YOUNEEDTOLEARNTHISSPELL);
-				g_game().addMagicEffect(player->getPosition(), CONST_ME_POFF);
-				return false;
-			}
-		} else if (!vocSpellMap.empty() && !vocSpellMap.contains(player->getVocationId()) && player->getGroup()->id < GROUP_TYPE_GAMEMASTER) {
-			player->sendCancelMessage(RETURNVALUE_YOURVOCATIONCANNOTUSETHISSPELL);
-			g_game().addMagicEffect(player->getPosition(), CONST_ME_POFF);
-			return false;
-		}
 	}
 
 	if (needWeapon) {
@@ -1009,6 +999,10 @@ const VocSpellMap &Spell::getVocMap() const {
 	return vocSpellMap;
 }
 
+bool Spell::isVocationAllowed(const std::shared_ptr<Player> &player) const {
+	return vocSpellMap.empty() || vocSpellMap.contains(player->getVocationId());
+}
+
 void Spell::addVocMap(uint16_t vocationId, bool b) {
 	if (vocationId == 0XFFFF) {
 		g_logger().error("Vocation overflow for spell: {}", getName());
@@ -1396,21 +1390,15 @@ bool InstantSpell::canCast(const std::shared_ptr<Player> &player) const {
 		return true;
 	}
 
-	if (g_configManager().getBoolean(LEARN_SPELLS)) {
+	if (!isVocationAllowed(player) && player->getGroup()->id < GROUP_TYPE_GAMEMASTER) {
+		return false;
+	}
+
+	if (g_configManager().getBoolean(LEARN_SPELLS) || getNeedLearn()) {
 		return player->hasLearnedInstantSpell(getName());
 	}
 
-	if (getNeedLearn()) {
-		if (player->hasLearnedInstantSpell(getName())) {
-			return true;
-		}
-	} else {
-		if (vocSpellMap.empty() || vocSpellMap.contains(player->getVocationId())) {
-			return true;
-		}
-	}
-
-	return false;
+	return true;
 }
 
 LuaScriptInterface* RuneSpell::getRuneSpellScriptInterface() const {
